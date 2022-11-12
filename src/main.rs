@@ -1,22 +1,21 @@
+mod ext;
+
 use std::{
-    fs::{self, read, File, FileType},
-    io::{self, BufReader, Error, Write},
+    fs, io,
     path::{Path, PathBuf},
-    string,
 };
 
-use pulldown_cmark::{html, Options, Parser};
-use rocket::{
-    fs::{relative, FileServer, NamedFile},
-    tokio::fs::create_dir,
-    Build,
-};
+use ext::FileCompiler;
+
+use rocket::fs::{relative, NamedFile};
 use walkdir::WalkDir;
+
+use crate::ext::MarkdownCompiler;
 
 #[macro_use]
 extern crate rocket;
 
-async fn build(path: &str) -> io::Result<()> {
+fn build(path: &str) -> io::Result<()> {
     if let Err(e) = fs::create_dir("public") {
         fs::remove_dir_all("public").unwrap();
         fs::create_dir("public").unwrap();
@@ -26,33 +25,25 @@ async fn build(path: &str) -> io::Result<()> {
     for entry in WalkDir::new(path) {
         if let Ok(e) = entry {
             let mut new_path = Path::join(public, e.path());
-            // jank file type checking because it doesn't support pattern matching
-            if e.file_name().to_string_lossy().ends_with(".md") {
-                println!("{}", e.path().to_string_lossy());
-                let file = File::open(e.path())?;
-                println!("file opened");
-                let text = String::from_utf8_lossy(&read(e.path())?).into_owned();
-                println!("text: {}", text);
-                // let mut reader = BufReader::new(file);
-                let parser = Parser::new(&text);
-                let mut output = String::new();
-                html::push_html(&mut output, parser);
-                println!("output: {}", output);
-                println!("new path: {}", Path::join(public, e.path()).to_string_lossy());
-                new_path.set_extension("html");
-                let mut out = File::create(new_path)?;
-                println!("made output file");
-                out.write(output.as_bytes())?;
-                println!("{}", output);
-            } else if e.file_type().is_file() {
-                fs::copy(e.path(), new_path).unwrap();
-            } else if e.file_type().is_dir() {
+            if e.file_type().is_dir() {
                 fs::create_dir(new_path).unwrap();
+            } else {
+                match e
+                    .path()
+                    .extension()
+                    .unwrap_or_default()
+                    .to_string_lossy()
+                    .to_lowercase()
+                    .as_str()
+                {
+                    "md" | "markdown" => MarkdownCompiler.compile(e.path(), &mut new_path)?,
+                    _ => {
+                        fs::copy(e.path(), new_path);
+                    }
+                }
             }
-
         }
     }
-    println!("finished");
     Ok(())
 }
 
@@ -65,12 +56,19 @@ async fn files(path: PathBuf) -> Option<NamedFile> {
     NamedFile::open(path).await.ok()
 }
 
-#[rocket::main]
-async fn main() {
-    build("dir").await.unwrap();
+#[launch]
+fn rocket() -> _ {
+    // let compilers: Vec<&dyn FileCompiler> = vec![&MarkdownCompiler {}];
+    // let config: Config = Config { compilers: vec![&MarkdownCompiler {}] };
+    // let compilers: Vec<&dyn FileCompiler> = vec![&MarkdownCompiler {}, &YewCompiler {}];
+    build("dir").unwrap();
 
-    let res = rocket::build().mount("/", routes![files]).launch().await;
+    rocket::build().mount("/", routes![files])
     // .ignite().await?
     // .mount("/", routes![files])
     // .mount("/", FileServer::from(relative!("dir")))
+}
+
+struct Config<'a> {
+    compilers: Vec<&'a dyn FileCompiler>,
 }

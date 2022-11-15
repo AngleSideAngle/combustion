@@ -58,9 +58,7 @@ async fn files(path: PathBuf) -> Option<NamedFile> {
 
 #[launch]
 fn rocket() -> _ {
-    // let compilers: Vec<&dyn FileCompiler> = vec![&MarkdownCompiler {}];
     // let config: Config = Config { compilers: vec![&MarkdownCompiler {}] };
-    // let compilers: Vec<&dyn FileCompiler> = vec![&MarkdownCompiler {}, &YewCompiler {}];
     build("dir").unwrap();
 
     rocket::build().mount("/", routes![files])

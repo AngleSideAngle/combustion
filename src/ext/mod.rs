@@ -5,7 +5,6 @@ use std::{
 };
 
 use pulldown_cmark::{html, Parser, Options};
-use yew::html as yew_html;
 
 /// compiles a file into its desired state when served based on file extension
 pub trait FileCompiler {
@@ -24,7 +23,6 @@ impl FileCompiler for MarkdownCompiler {
 
         let mut out = File::create(output)?;
         out.write(parsed_text.as_bytes())?;
-        // out.write(yew_html!(parsed_text).);
         Ok(())
     }
 }

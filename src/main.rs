@@ -1,12 +1,10 @@
 mod build;
-mod ext;
+mod compilers;
 
 use std::{
     fs, io,
     path::{Path, PathBuf},
 };
-
-use ext::FileCompiler;
 
 use handlebars::Handlebars;
 use rocket::{
@@ -46,10 +44,11 @@ async fn registry_files(path: PathBuf, registry: &State<Handlebars<'_>>) -> Stri
 #[launch]
 fn rocket() -> _ {
     let mut registry = Handlebars::new();
+    let mut templates = Handlebars::new();
 
     // let config: Config = Config { compilers: vec![&MarkdownCompiler {}] };
-    build::gen_templates("dir/");
-    build::build("dir/", &mut registry).unwrap();
+    build::gen_templates("dir/", &mut templates);
+    build::build("dir/", &templates).unwrap();
 
     rocket::build()
         .manage(registry)

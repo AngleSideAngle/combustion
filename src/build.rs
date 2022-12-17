@@ -1,15 +1,18 @@
-use std::{fs, io, path::{Path, self}};
+use std::{
+    fs, io,
+    path::{self, Path},
+};
 
 use handlebars::Handlebars;
 use walkdir::WalkDir;
 
-use crate::ext::{FileCompiler, MarkdownCompiler, DefaultCompiler};
+use crate::compilers::{DefaultCompiler, FileCompiler, MarkdownCompiler};
 
 const BUILD_DIR: &str = "public";
 const PAGES_DIR: &str = "pages";
 const TEMPLATES_DIR: &str = "templates";
 
-pub fn build(path: &str, registry: &mut Handlebars) -> io::Result<()> {
+pub fn build(path: &str, registry: &Handlebars) -> io::Result<()> {
     let pages = Path::join(Path::new(path), Path::new(PAGES_DIR));
     let public = Path::new(BUILD_DIR);
 
@@ -24,7 +27,7 @@ pub fn build(path: &str, registry: &mut Handlebars) -> io::Result<()> {
 
     for entry in paths {
         let path = entry.path();
-    
+
         let mut out = Path::join(public, path.strip_prefix(&pages).unwrap());
         println!("{:?}", out);
 
@@ -33,26 +36,37 @@ pub fn build(path: &str, registry: &mut Handlebars) -> io::Result<()> {
             .unwrap_or_default()
             .to_string_lossy()
             .to_lowercase()
-            .as_str() {
-                // use polymorphism later
-                "md" | "markdown" => MarkdownCompiler.compile(path, &mut out)?,
-                _ => {
-                    DefaultCompiler.compile(path, &mut out)?;
-                }
+            .as_str()
+        {
+            // use polymorphism later
+            "md" | "markdown" => MarkdownCompiler.compile(path, &mut out, registry)?,
+            _ => {
+                DefaultCompiler.compile(path, &mut out, registry)?;
             }
+        }
     }
-    
+
     Ok(())
 }
 
-pub fn gen_templates(path: &str) {
-    let mut templates = Handlebars::new();
+pub fn gen_templates(path: &str, registry: &mut Handlebars) {
     let templates = Path::new(TEMPLATES_DIR);
-    for entry in WalkDir::new(Path::new(path).join(templates))
+    WalkDir::new(Path::new(path).join(templates))
         .into_iter()
-        .skip(1)
         .filter_map(|f| f.ok())
-    {
-        println!("{}", entry.file_name().to_str().get_or_insert("NA"));
-    }
+        .filter(|f| f.file_type().is_file())
+        .filter(|f| {
+            f.path()
+                .extension()
+                .unwrap_or_default()
+                .to_string_lossy()
+                .to_lowercase()
+                .as_str()
+                == "html"
+        })
+        .for_each(|entry| {
+            let name = entry.file_name().to_string_lossy().to_string();
+            let name = &name[0..name.len() - 5];
+            registry.register_template_file(name, entry.path()).unwrap()
+        });
 }

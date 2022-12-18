@@ -11,8 +11,9 @@ use crate::compilers::{DefaultCompiler, FileCompiler, MarkdownCompiler};
 const BUILD_DIR: &str = "public";
 const PAGES_DIR: &str = "pages";
 const TEMPLATES_DIR: &str = "templates";
+const DATA_DIR: &str = "data";
 
-pub fn build(path: &str, registry: &Handlebars) -> io::Result<()> {
+pub fn build_pages(path: &str, registry: &Handlebars) -> io::Result<()> {
     let pages = Path::join(Path::new(path), Path::new(PAGES_DIR));
     let public = Path::new(BUILD_DIR);
 
@@ -69,4 +70,11 @@ pub fn gen_templates(path: &str, registry: &mut Handlebars) {
             let name = &name[0..name.len() - 5];
             registry.register_template_file(name, entry.path()).unwrap()
         });
+}
+
+pub fn gen_static() {}
+
+pub fn register_data(path: &str) {
+    let data = Path::new(DATA_DIR);
+    WalkDir::new(Path::new(path).join(data));
 }

@@ -1,7 +1,13 @@
 [package]
-name = "forest_fire"
+name = "combustion"
 version = "0.1.0"
+authors = ["Asa Paparo"]
 edition = "2021"
+rust-version = "1.66.0"
+description = "A static site generator that renders templates per request"
+readme = "README.md"
+repository = "https://github.com/AngleSideAngle/combustion"
+license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

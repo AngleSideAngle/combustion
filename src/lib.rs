@@ -24,8 +24,7 @@ use rocket::{
 use rocket_dyn_templates::Template;
 use toml::Value;
 
-#[macro_use]
-extern crate rocket;
+#[macro_use] extern crate rocket;
 
 /**
 site structure:
@@ -72,7 +71,7 @@ async fn ssr(
 }
 
 // #[rocket::main]
-pub async fn start() {
+pub async fn start(path: &str) {
     let mut data: BTreeMap<String, Value> = BTreeMap::new();
     let mut templates = Handlebars::new();
     let mut registry = Handlebars::new();
@@ -80,9 +79,9 @@ pub async fn start() {
     registry.set_strict_mode(true);
 
     // let config: Config = Config { compilers: vec![&MarkdownCompiler {}] };
-    build::gen_templates("dir/", &mut templates);
-    build::register_data("dir/", &mut data);
-    build::build_pages("dir/", &templates).unwrap();
+    build::gen_templates(path, &mut templates);
+    build::register_data(path, &mut data);
+    build::build_pages(path, &templates).unwrap();
 
     let _ = rocket::build()
         // .manage(registry)

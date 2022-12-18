@@ -1,0 +1,7 @@
+[writer]
+name = "asa"
+age = 16
+
+[site]
+port = 8000
+nums = [1, 2, 3]

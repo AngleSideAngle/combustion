@@ -1,9 +1,11 @@
 use std::{
+    collections::BTreeMap,
     fs, io,
     path::{self, Path},
 };
 
 use handlebars::Handlebars;
+use toml::Value;
 use walkdir::WalkDir;
 
 use crate::compilers::{DefaultCompiler, FileCompiler, MarkdownCompiler};
@@ -74,7 +76,24 @@ pub fn gen_templates(path: &str, registry: &mut Handlebars) {
 
 pub fn gen_static() {}
 
-pub fn register_data(path: &str) {
-    let data = Path::new(DATA_DIR);
-    WalkDir::new(Path::new(path).join(data));
+pub fn register_data(path: &str, data: &mut BTreeMap<String, Value>) {
+    let data_path = Path::new(DATA_DIR);
+    WalkDir::new(Path::new(path).join(data_path))
+        .into_iter()
+        .filter_map(|f| f.ok())
+        .filter(|f| f.file_type().is_file())
+        .filter(|f| {
+            f.path()
+                .extension()
+                .unwrap_or_default()
+                .to_string_lossy()
+                .to_lowercase()
+                .as_str()
+                == "toml"
+        })
+        .for_each(|entry| {
+            let text = fs::read_to_string(entry.path()).unwrap();
+            let mut map: BTreeMap<String, Value> = toml::from_str(&text).unwrap();
+            data.append(&mut map);
+        })
 }

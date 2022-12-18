@@ -3,19 +3,26 @@ mod compilers;
 
 use std::{
     collections::BTreeMap,
+    io::Cursor,
     // fs, io,
-    path::{Path, PathBuf, self}, io::Cursor,
+    path::{self, Path, PathBuf},
 };
 
 use handlebars::Handlebars;
 use rocket::{
+    form::Error,
     fs::{relative, NamedFile},
     http::ContentType,
+    response::{
+        self,
+        content::{self, RawHtml},
+        Responder,
+    },
     tokio::fs,
-    State, Response, response::{content::{self, RawHtml}, Responder, self}, form::Error,
+    Response, State,
 };
 use rocket_dyn_templates::Template;
-
+use toml::Value;
 
 #[macro_use]
 extern crate rocket;
@@ -40,7 +47,11 @@ async fn files(path: PathBuf) -> Option<NamedFile> {
 }
 
 #[get("/<path..>")]
-async fn ssr(path: PathBuf, templates: &State<Handlebars<'_>>, data: &State<BTreeMap<String, String>>) -> (ContentType, String) {
+async fn ssr(
+    path: PathBuf,
+    templates: &State<Handlebars<'_>>,
+    data: &State<BTreeMap<String, Value>>,
+) -> (ContentType, String) {
     // does not use rocket templates to horrid lack of configurability
 
     // Template::render(path.file_name(), data);
@@ -48,12 +59,15 @@ async fn ssr(path: PathBuf, templates: &State<Handlebars<'_>>, data: &State<BTre
     if path.is_dir() {
         path.push("index.html");
     }
-    
+
     // jank workaround to return variable content type
     // this is the only solution i found after several hours of looking
     (
-        ContentType::from_extension(&path.extension().unwrap_or_default().to_string_lossy()).unwrap_or_default(),
-        templates.render_template(&fs::read_to_string(&path).await.unwrap(), data.inner()).unwrap()
+        ContentType::from_extension(&path.extension().unwrap_or_default().to_string_lossy())
+            .unwrap_or_default(),
+        templates
+            .render_template(&fs::read_to_string(&path).await.unwrap(), data.inner())
+            .unwrap(),
     )
 }
 
@@ -61,7 +75,7 @@ async fn ssr(path: PathBuf, templates: &State<Handlebars<'_>>, data: &State<BTre
 
 #[launch]
 fn rocket() -> _ {
-    let mut data: BTreeMap<String, String> = BTreeMap::new();
+    let mut data: BTreeMap<String, Value> = BTreeMap::new();
     let mut templates = Handlebars::new();
     let mut registry = Handlebars::new();
     // registry.
@@ -69,7 +83,7 @@ fn rocket() -> _ {
 
     // let config: Config = Config { compilers: vec![&MarkdownCompiler {}] };
     build::gen_templates("dir/", &mut templates);
-    build::register_data("dir/");
+    build::register_data("dir/", &mut data);
     build::build_pages("dir/", &templates).unwrap();
 
     rocket::build()

@@ -71,10 +71,8 @@ async fn ssr(
     )
 }
 
-// #[get("")]
-
-#[launch]
-fn rocket() -> _ {
+// #[rocket::main]
+pub async fn start() {
     let mut data: BTreeMap<String, Value> = BTreeMap::new();
     let mut templates = Handlebars::new();
     let mut registry = Handlebars::new();
@@ -86,9 +84,31 @@ fn rocket() -> _ {
     build::register_data("dir/", &mut data);
     build::build_pages("dir/", &templates).unwrap();
 
-    rocket::build()
+    let _ = rocket::build()
         // .manage(registry)
         .manage(templates)
         .manage(data)
         .mount("/", routes![ssr])
+        .launch().await.unwrap();
 }
+// #[get("")]
+
+// #[launch]
+// fn rocket() -> _ {
+//     let mut data: BTreeMap<String, Value> = BTreeMap::new();
+//     let mut templates = Handlebars::new();
+//     let mut registry = Handlebars::new();
+//     // registry.
+//     registry.set_strict_mode(true);
+
+//     // let config: Config = Config { compilers: vec![&MarkdownCompiler {}] };
+//     build::gen_templates("dir/", &mut templates);
+//     build::register_data("dir/", &mut data);
+//     build::build_pages("dir/", &templates).unwrap();
+
+//     rocket::build()
+//         // .manage(registry)
+//         .manage(templates)
+//         .manage(data)
+//         .mount("/", routes![ssr])
+// }

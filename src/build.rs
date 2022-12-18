@@ -1,8 +1,4 @@
-use std::{
-    collections::BTreeMap,
-    fs, io,
-    path::{self, Path},
-};
+use std::{collections::BTreeMap, fs, io, path::Path};
 
 use handlebars::Handlebars;
 use toml::Value;

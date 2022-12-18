@@ -3,28 +3,17 @@ mod compilers;
 
 use std::{
     collections::BTreeMap,
-    io::Cursor,
     // fs, io,
-    path::{self, Path, PathBuf},
+    path::{Path, PathBuf},
 };
 
 use handlebars::Handlebars;
-use rocket::{
-    form::Error,
-    fs::{relative, NamedFile},
-    http::ContentType,
-    response::{
-        self,
-        content::{self, RawHtml},
-        Responder,
-    },
-    tokio::fs,
-    Response, State,
-};
-use rocket_dyn_templates::Template;
+use rocket::{fs::relative, http::ContentType, tokio::fs, State};
+
 use toml::Value;
 
-#[macro_use] extern crate rocket;
+#[macro_use]
+extern crate rocket;
 
 /**
 site structure:
@@ -35,15 +24,6 @@ targetDir
 └── templates
 └── data
 */
-
-#[get("/<path..>")]
-async fn files(path: PathBuf) -> Option<NamedFile> {
-    let mut path = Path::new(relative!("public")).join(path);
-    if path.is_dir() {
-        path.push("index.html");
-    }
-    NamedFile::open(path).await.ok()
-}
 
 #[get("/<path..>")]
 async fn ssr(
@@ -70,7 +50,6 @@ async fn ssr(
     )
 }
 
-// #[rocket::main]
 pub async fn start(path: &str) {
     let mut data: BTreeMap<String, Value> = BTreeMap::new();
     let mut templates = Handlebars::new();
@@ -84,30 +63,10 @@ pub async fn start(path: &str) {
     build::build_pages(path, &templates).unwrap();
 
     let _ = rocket::build()
-        // .manage(registry)
         .manage(templates)
         .manage(data)
         .mount("/", routes![ssr])
-        .launch().await.unwrap();
+        .launch()
+        .await
+        .unwrap();
 }
-// #[get("")]
-
-// #[launch]
-// fn rocket() -> _ {
-//     let mut data: BTreeMap<String, Value> = BTreeMap::new();
-//     let mut templates = Handlebars::new();
-//     let mut registry = Handlebars::new();
-//     // registry.
-//     registry.set_strict_mode(true);
-
-//     // let config: Config = Config { compilers: vec![&MarkdownCompiler {}] };
-//     build::gen_templates("dir/", &mut templates);
-//     build::register_data("dir/", &mut data);
-//     build::build_pages("dir/", &templates).unwrap();
-
-//     rocket::build()
-//         // .manage(registry)
-//         .manage(templates)
-//         .manage(data)
-//         .mount("/", routes![ssr])
-// }

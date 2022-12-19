@@ -157,6 +157,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "combustion"
+version = "0.1.0"
+dependencies = [
+ "gray_matter",
+ "handlebars",
+ "pulldown-cmark",
+ "rocket",
+ "rocket_dyn_templates",
+ "serde",
+ "toml",
+ "walkdir",
+]
+
+[[package]]
 name = "cookie"
 version = "0.16.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -304,20 +318,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 
 [[package]]
-name = "forest_fire"
-version = "0.1.0"
-dependencies = [
- "gray_matter",
- "handlebars",
- "pulldown-cmark",
- "rocket",
- "rocket_dyn_templates",
- "serde",
- "toml",
- "walkdir",
-]
-
-[[package]]
 name = "fsevent"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -356,7 +356,8 @@ checksum = "3dcaa9ae7725d12cdb85b3ad99a434db70b468c09ded17e012d86b5c1010f7a7"
 name = "full_site"
 version = "0.1.0"
 dependencies = [
- "forest_fire",
+ "combustion",
+ "handlebars",
  "rocket",
 ]
 

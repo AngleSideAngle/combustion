@@ -10,3 +10,5 @@ test
 more testing...
 
 {{writer.name}}
+
+here's something fetched by a helper: {{thing abcd}}

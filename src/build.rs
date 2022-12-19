@@ -70,7 +70,7 @@ pub fn gen_templates(path: &str, registry: &mut Handlebars) {
         });
 }
 
-pub fn gen_static() {}
+// pub fn gen_static() {}
 
 pub fn register_data(path: &str, data: &mut BTreeMap<String, Value>) {
     let data_path = Path::new(DATA_DIR);

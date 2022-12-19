@@ -1,0 +1,2 @@
+[workspace]
+members = ["full_site"]

@@ -1,0 +1,5 @@
+{
+    "rust-analyzer.linkedProjects": [
+        "./examples/full_site/Cargo.toml"
+    ]
+}

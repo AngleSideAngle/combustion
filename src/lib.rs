@@ -6,23 +6,11 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use axum::{Router, routing::get};
 use handlebars::{Handlebars, HelperDef};
-use rocket::{http::ContentType, tokio::fs, State};
 
 use toml::Value;
 
-#[macro_use]
-extern crate rocket;
-
-/**
-site structure:
-
-targetDir
-├── pages
-└── static (cloned, rather than compiled)
-└── templates
-└── data
-*/
 
 #[get("/<path..>")]
 async fn ssr(
@@ -70,6 +58,8 @@ impl Default for Config {
     }
 }
 
+std::include!("build.rs");
+
 struct Vars {
     path: PathBuf,
 }
@@ -92,12 +82,14 @@ pub async fn start(config: Config) {
         registry.register_helper(&helper.0, helper.1);
     }
 
-    let _ = rocket::build()
-        .manage(registry)
-        .manage(data)
-        .manage(vars)
-        .mount("/", routes![ssr])
-        .launch()
+    let app = Router::new()
+        .route_service(path, service)
+        .route("/", get(|| async { "hello world" }))
+        .with_state(state);
+
+    axum::Server::bind(&"0.0.0.0:3000".parse().unwrap())
+        .serve(app.into_make_service())
         .await
-        .unwrap();
+        .unwrap()
+        
 }

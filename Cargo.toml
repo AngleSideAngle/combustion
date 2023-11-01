@@ -1,9 +1,9 @@
 [package]
 name = "combustion"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Asa Paparo"]
 edition = "2021"
-rust-version = "1.66.0"
+rust-version = "1.71"
 description = "A static site generator that renders templates per request"
 readme = "README.md"
 repository = "https://github.com/AngleSideAngle/combustion"
@@ -12,7 +12,8 @@ license = "MIT"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rocket = "0.5.0-rc.2"
+axum = "0.6"
+tokio = { version = "1.29.1", features = ["macros", "rt-multi-thread"] }
 handlebars = "4.3.5"
 pulldown-cmark = "0.9.2"
 walkdir = "2"
